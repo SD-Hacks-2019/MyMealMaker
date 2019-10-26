@@ -11,6 +11,15 @@ import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import com.amazonaws.services.rekognition.AmazonRekognitionClient;
+import com.amazonaws.auth.BasicAWSCredentials;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +38,24 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        Properties awsKey = new Properties();
+        try {
+            // try to read the properties file
+            InputStream awsKeyReadStream = getBaseContext().getAssets().open("AWS.properties");
+            awsKey.load(awsKeyReadStream);
+            awsKeyReadStream.close();
+        }
+        catch (IOException exception) {
+            Toast.makeText(this, "An Error has Occurred", Toast.LENGTH_SHORT).show();
+        }
+
+        // get the key and secret
+        String keyID = awsKey.getProperty("keyID");
+        String secret = awsKey.getProperty("secret");
+
+        // log into AWS Rekognition
+        AmazonRekognitionClient myClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
     }
 
     @Override
