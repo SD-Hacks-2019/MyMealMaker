@@ -16,9 +16,9 @@ import android.widget.Toast;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.auth.BasicAWSCredentials;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,22 +40,36 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Properties awsKey = new Properties();
+        Properties edamamKey = new Properties();
         try {
-            // try to read the properties file
+            // try to read the AWS properties file
             InputStream awsKeyReadStream = getBaseContext().getAssets().open("AWS.properties");
             awsKey.load(awsKeyReadStream);
             awsKeyReadStream.close();
+
+            // try to read the Edamam properties file
+            InputStream edamamKeyReadStream = getBaseContext().getAssets().open("Edamam.properties");
+            edamamKey.load(edamamKeyReadStream);
+            edamamKeyReadStream.close();
         }
         catch (IOException exception) {
             Toast.makeText(this, "An Error has Occurred", Toast.LENGTH_SHORT).show();
         }
 
-        // get the key and secret
+        // get the AWS key and secret
         String keyID = awsKey.getProperty("keyID");
         String secret = awsKey.getProperty("secret");
 
         // log into AWS Rekognition
-        AmazonRekognitionClient myClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
+        AmazonRekognitionClient myAWSClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
+
+        // get the Edamam key and secret
+        String appID = edamamKey.getProperty("appID");
+        String appKey = edamamKey.getProperty("appKey");
+
+        EdamamCallback myCallback = new EdamamCallback(this);
+        EdamamClient myEdamamClient = new EdamamClient(appID, appKey);
+        myEdamamClient.requestRecipe(Arrays.asList(new String[]{"chicken", "pasta"}), myCallback);
     }
 
     @Override
