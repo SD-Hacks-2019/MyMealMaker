@@ -7,7 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import  android.os.Bundle;
+import android.content.res.AssetManager;
+import android.os.Bundle;
 
+import com.amazonaws.util.IOUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.app.AlertDialog;
@@ -27,6 +30,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,11 +56,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Properties awsKey = new Properties();
+        Properties fAWSKey = new Properties();
         try {
-            // try to read the properties file
+            // try to read the AWS properties file
             InputStream awsKeyReadStream = getBaseContext().getAssets().open("AWS.properties");
-            awsKey.load(awsKeyReadStream);
+            fAWSKey.load(awsKeyReadStream);
             awsKeyReadStream.close();
         }
         catch (IOException exception) {
@@ -64,11 +68,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // get the key and secret
-        String keyID = awsKey.getProperty("keyID");
-        String secret = awsKey.getProperty("secret");
+        String keyID = fAWSKey.getProperty("keyID");
+        String secret = fAWSKey.getProperty("secret");
+        System.out.println("test");
 
-        // log into AWS Rekognition
-        AmazonRekognitionClient myClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
+        try {
+            InputStream testImage = getAssets().open("IMG_20191026_102738.jpg");
+            byte[] imgArr = IOUtils.toByteArray(testImage);
+            Ingredient testIngredient = new Ingredient(keyID, secret, imgArr);
+            Thread myThread = new Thread(testIngredient);
+            myThread.start();
+            myThread.join();
+            System.out.println(testIngredient.getLabel());
+        } catch (Exception e) {}
     }
 
     @Override
