@@ -12,7 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 
@@ -49,9 +51,14 @@ public class RecipeDetailFragment extends Fragment {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            Serializable serialized = savedInstanceState.getSerializable(ARG_ITEM_ID);
-            if (serialized instanceof Recipe) {
-                mItem = (Recipe) serialized;
+            Serializable serialized = getArguments().getSerializable(ARG_ITEM_ID);
+            if (serialized instanceof SerializableRecipe) {
+                try {
+                    mItem = new Recipe((SerializableRecipe) serialized);
+                }
+                catch (JSONException jse) {
+                    jse.printStackTrace();
+                }
             }
 
             Activity activity = this.getActivity();
@@ -67,6 +74,15 @@ public class RecipeDetailFragment extends Fragment {
         }
     }
 
+    public void appendNutritionalQuantity(StringBuilder builder, String label, JSONObject nutrients) throws JSONException {
+        JSONObject object = nutrients.getJSONObject(label);
+        builder.append(object.getString("label"));
+        builder.append(": ");
+        builder.append((int)object.getDouble("quantity"));
+        builder.append(object.getString("unit"));
+        builder.append('\n');
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -74,7 +90,48 @@ public class RecipeDetailFragment extends Fragment {
 
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.recipe_detail)).setText("yuh");
+            StringBuilder details = new StringBuilder();
+            try {
+                JSONObject recipe = mItem.getRecipe();
+                JSONObject nutrients = recipe.getJSONObject("totalNutrients");
+                details.append("Total Time: ");
+                int time = recipe.getInt("totalTime");
+                details.append((time != 0) ? time : 20);
+                details.append(" min\n");
+                details.append("Weight: ");
+                details.append((int)recipe.getDouble("totalWeight"));
+                details.append("g\n");
+                details.append("Yield: ");
+                details.append(recipe.getInt("yield"));
+                details.append("\n\n");
+
+                details.append("Ingredients:\n\n");
+                JSONArray ingredientArray = recipe.getJSONArray("ingredientLines");
+                for (int i = 0; i < ingredientArray.length(); i++) {
+                    details.append(ingredientArray.getString(i));
+                    details.append('\n');
+                }
+
+                details.append("\nNutritional Information:\n");
+
+                details.append("Calories: ");
+                details.append((int)recipe.getDouble("calories"));
+                details.append('\n');
+
+                appendNutritionalQuantity(details, "FAT", nutrients);
+                appendNutritionalQuantity(details, "SUGAR", nutrients);
+                appendNutritionalQuantity(details, "NA", nutrients);
+                appendNutritionalQuantity(details, "CHOCDF", nutrients);
+                appendNutritionalQuantity(details, "FIBTG", nutrients);
+                appendNutritionalQuantity(details, "PROCNT", nutrients);
+                appendNutritionalQuantity(details, "CHOLE", nutrients);
+
+            }
+            catch (JSONException jse) {
+                jse.printStackTrace();
+            }
+            ((TextView) rootView.findViewById(R.id.recipe_detail)).setTextSize(16.0f);
+            ((TextView) rootView.findViewById(R.id.recipe_detail)).setText(details);
         }
 
         return rootView;

@@ -47,8 +47,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|start"
         android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="#3F51B5"
         app:layout_anchor="@+id/recipe_detail_container"
         app:layout_anchorGravity="top|end"
-        app:srcCompat="@android:drawable/stat_notify_chat" />
+        app:maxImageSize="32dp"
+        app:srcCompat="@android:drawable/ic_menu_info_details" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
