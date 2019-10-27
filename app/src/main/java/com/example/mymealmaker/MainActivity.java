@@ -1,7 +1,9 @@
 package com.example.mymealmaker;
 
+import android.content.res.AssetManager;
 import android.os.Bundle;
 
+import com.amazonaws.util.IOUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -39,37 +41,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Properties awsKey = new Properties();
-        Properties edamamKey = new Properties();
+        Properties fAWSKey = new Properties();
         try {
             // try to read the AWS properties file
             InputStream awsKeyReadStream = getBaseContext().getAssets().open("AWS.properties");
-            awsKey.load(awsKeyReadStream);
+            fAWSKey.load(awsKeyReadStream);
             awsKeyReadStream.close();
-
-            // try to read the Edamam properties file
-            InputStream edamamKeyReadStream = getBaseContext().getAssets().open("Edamam.properties");
-            edamamKey.load(edamamKeyReadStream);
-            edamamKeyReadStream.close();
         }
         catch (IOException exception) {
             Toast.makeText(this, "An Error has Occurred", Toast.LENGTH_SHORT).show();
         }
 
-        // get the AWS key and secret
-        String keyID = awsKey.getProperty("keyID");
-        String secret = awsKey.getProperty("secret");
+        // get the key and secret
+        String keyID = fAWSKey.getProperty("keyID");
+        String secret = fAWSKey.getProperty("secret");
+        System.out.println("test");
 
-        // log into AWS Rekognition
-        AmazonRekognitionClient myAWSClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
-
-        // get the Edamam key and secret
-        String appID = edamamKey.getProperty("appID");
-        String appKey = edamamKey.getProperty("appKey");
-
-        EdamamCallback myCallback = new EdamamCallback(this);
-        EdamamClient myEdamamClient = new EdamamClient(appID, appKey);
-        myEdamamClient.requestRecipe(Arrays.asList(new String[]{"chicken", "pasta"}), myCallback);
+        try {
+            InputStream testImage = getAssets().open("IMG_20191026_102738.jpg");
+            byte[] imgArr = IOUtils.toByteArray(testImage);
+            Ingredient testIngredient = new Ingredient(keyID, secret, imgArr);
+            Thread myThread = new Thread(testIngredient);
+            myThread.start();
+            myThread.join();
+            System.out.println(testIngredient.getLabel());
+        } catch (Exception e) {}
     }
 
     @Override
