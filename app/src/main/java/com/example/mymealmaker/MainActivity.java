@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
@@ -126,11 +127,22 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void doSearchRecipes(View view) {
-        Intent intent = new Intent(this, RecipeListActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(INGREDIENTS, (Serializable) Arrays.asList(new String[] {"chicken", "pasta"}));
-        intent.putExtras(bundle);
-        startActivity(intent);
+        if (ingredientList.size() > 0) {
+            Intent intent = new Intent(this, RecipeListActivity.class);
+            Bundle bundle = new Bundle();
+
+            List<String> ingredientStrings = new ArrayList<>();
+            for (Ingredient ingredient : ingredientList) {
+                ingredientStrings.add(ingredient.getLabel().getName());
+            }
+
+            bundle.putSerializable(INGREDIENTS, (Serializable) ingredientStrings);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        }
+        else {
+            Toast.makeText(this, "Add some ingredients first", Toast.LENGTH_SHORT).show();
+        }
     }
   
     public void captureImage() {
