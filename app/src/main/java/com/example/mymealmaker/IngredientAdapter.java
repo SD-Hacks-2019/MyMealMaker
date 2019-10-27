@@ -4,38 +4,37 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class IngredientAdapter extends BaseAdapter {
+import java.util.ArrayList;
+
+public class IngredientAdapter extends ArrayAdapter<Ingredient> {
     Context context;
     LayoutInflater layoutInflater = null;
+    private ArrayList<Ingredient> ingredientList;
 
-    public IngredientAdapter(Context context) {
+    public IngredientAdapter(ArrayList<Ingredient> data, Context context) {
+        super(context, R.layout.ingredient_row, data);
         this.context = context;
-        this.layoutInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.ingredientList = data;
     }
 
     @Override
     public int getCount() {
-        return 0;
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return null;
+        return ingredientList.size();
     }
 
     @Override
     public long getItemId(int position) {
-        return 0;
+        return ingredientList.get(position).getId();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        convertView = layoutInflater.inflate(R.layout.ingredient_row, parent,false);
-
-        ((TextView)convertView.findViewById(R.id.name)).setText(ingredientList.get(position).getName());
+        layoutInflater = LayoutInflater.from(context);
+        convertView = layoutInflater.inflate(R.layout.ingredient_row, null);
+        ((TextView)convertView.findViewById(R.id.name)).setText(ingredientList.get(position).getLabel().getName());
         return convertView;
     }
 }
