@@ -6,7 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -71,11 +71,17 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Properties fAWSKey = new Properties();
+        Properties edamamKey = new Properties();
         try {
             // try to read the AWS properties file
             InputStream awsKeyReadStream = getBaseContext().getAssets().open("AWS.properties");
             fAWSKey.load(awsKeyReadStream);
             awsKeyReadStream.close();
+
+            // try to read the Edamam properties file
+            InputStream edamamKeyReadStream = getBaseContext().getAssets().open("Edamam.properties");
+            edamamKey.load(edamamKeyReadStream);
+            edamamKeyReadStream.close();
         }
         catch (IOException exception) {
             Toast.makeText(this, "An Error has Occurred opening AWS properties", Toast.LENGTH_SHORT).show();
