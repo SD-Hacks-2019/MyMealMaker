@@ -13,8 +13,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 import androidx.core.app.NavUtils;
@@ -77,21 +79,46 @@ public class RecipeListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
+        Bundle extras = getIntent().getExtras();
+
+        if (extras != null) {
+            if (extras.containsKey(MainActivity.INGREDIENTS)) {
+                Serializable incoming = extras.getSerializable(MainActivity.INGREDIENTS);
+                List<String> incomingList = new ArrayList<>();
+                if (incoming instanceof List) {
+                    incomingList = (List<String>) incoming;
+                }
+
+
+                EdamamCallback myCallback = new EdamamCallback(this);
+                EdamamClient myEdamamClient = new EdamamClient(MainActivity.edamamID, MainActivity.edamamSecret);
+                myEdamamClient.requestRecipe(incomingList, myCallback);
+            }
+            else if (extras.containsKey(RecipeDetailActivity.RECIPES)) {
+                Serializable incoming = extras.getSerializable(RecipeDetailActivity.RECIPES);
+                List<SerializableRecipe> incomingList = new ArrayList<>();
+                if (incoming instanceof List) {
+                    incomingList = (List<SerializableRecipe>) incoming;
+                }
+
+                List<Recipe> deserialized = new ArrayList<Recipe>();
+                for (SerializableRecipe recipe : incomingList) {
+                    try {
+                        deserialized.add(new Recipe(recipe));
+                    }
+                    catch (JSONException jse) {
+                        jse.printStackTrace();
+                    }
+                }
+
+                ingredients = deserialized;
+            }
+        }
+
+        // set up the recycler (list) view
         recyclerView = findViewById(R.id.recipe_list);
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
-
-
-        Serializable incoming = getIntent().getExtras().getSerializable(MainActivity.INGREDIENTS);
-        List<String> incomingList = new ArrayList<>();
-        if (incoming instanceof List) {
-            incomingList = (List<String>) incoming;
-        }
-
-
-        EdamamCallback myCallback = new EdamamCallback(this);
-        EdamamClient myEdamamClient = new EdamamClient(MainActivity.edamamID, MainActivity.edamamSecret);
-        myEdamamClient.requestRecipe(incomingList, myCallback);
     }
 
 
@@ -135,32 +162,43 @@ public class RecipeListActivity extends AppCompatActivity {
         private final RecipeListActivity mParentActivity;
         private final List<Recipe> mValues;
         private final boolean mTwoPane;
+
+        public void clickHandler(View view) {
+            Recipe item = (Recipe) view.getTag();
+            if (mTwoPane) {
+                Bundle arguments = new Bundle();
+                try {
+                    arguments.putString(RecipeDetailFragment.ARG_ITEM_ID, item.getRecipe().getString("label"));
+                }
+                catch (JSONException jse) {
+                    jse.printStackTrace();
+                }
+                RecipeDetailFragment fragment = new RecipeDetailFragment();
+                fragment.setArguments(arguments);
+                mParentActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.recipe_detail_container, fragment)
+                        .commit();
+            } else {
+                Context context = view.getContext();
+                Intent intent = new Intent(context, RecipeDetailActivity.class);
+
+                intent.putExtra(RecipeDetailFragment.ARG_ITEM_ID, new SerializableRecipe(item));
+
+                List<SerializableRecipe> serialized = new ArrayList<>();
+                for (Recipe recipe : mValues) {
+                    serialized.add(new SerializableRecipe(recipe));
+                }
+
+                intent.putExtra(RecipeDetailActivity.RECIPES, (Serializable) serialized);
+
+                context.startActivity(intent);
+            }
+        }
+
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Recipe item = (Recipe) view.getTag();
-                if (mTwoPane) {
-                    Bundle arguments = new Bundle();
-                    try {
-                        arguments.putString(RecipeDetailFragment.ARG_ITEM_ID, item.getRecipe().getString("label"));
-                    }
-                    catch (JSONException jse) {
-                        jse.printStackTrace();
-                    }
-                    RecipeDetailFragment fragment = new RecipeDetailFragment();
-                    fragment.setArguments(arguments);
-                    mParentActivity.getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.recipe_detail_container, fragment)
-                            .commit();
-                } else {
-                    Context context = view.getContext();
-                    Intent intent = new Intent(context, RecipeDetailActivity.class);
-
-                    intent.putExtra(RecipeDetailFragment.ARG_ITEM_ID, (Serializable)item);
-
-
-                    context.startActivity(intent);
-                }
+                clickHandler(view);
             }
         };
 
@@ -182,8 +220,11 @@ public class RecipeListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             try {
-                holder.mIdView.setText(mValues.get(position).getRecipe().getString("label"));
-                holder.mContentView.setText(mValues.get(position).getRecipe().getString("source"));
+                holder.mNameView.setText(mValues.get(position).getRecipe().getString("label"));
+                holder.mThumbView.loadUrl(mValues.get(position).getRecipe().getString("image"));
+                System.out.println(mValues.get(position).getRecipe().getString("image"));
+                //holder.mThumbView.setImageURI(Uri.parse(mValues.get(position).getRecipe().getString("image")));
+                //holder.mThumbView.setText(mValues.get(position).getRecipe().getString("source"));
             }
             catch (JSONException jse) {
                 jse.printStackTrace();
@@ -199,13 +240,13 @@ public class RecipeListActivity extends AppCompatActivity {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            final TextView mIdView;
-            final TextView mContentView;
+            final TextView mNameView;
+            final WebView mThumbView;
 
             ViewHolder(View view) {
                 super(view);
-                mIdView = (TextView) view.findViewById(R.id.id_text);
-                mContentView = (TextView) view.findViewById(R.id.content);
+                mNameView = (TextView) view.findViewById(R.id.id_text);
+                mThumbView = (WebView) view.findViewById(R.id.content);
             }
         }
     }

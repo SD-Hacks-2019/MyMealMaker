@@ -12,7 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 
@@ -49,9 +51,14 @@ public class RecipeDetailFragment extends Fragment {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            Serializable serialized = savedInstanceState.getSerializable(ARG_ITEM_ID);
-            if (serialized instanceof Recipe) {
-                mItem = (Recipe) serialized;
+            Serializable serialized = getArguments().getSerializable(ARG_ITEM_ID);
+            if (serialized instanceof SerializableRecipe) {
+                try {
+                    mItem = new Recipe((SerializableRecipe) serialized);
+                }
+                catch (JSONException jse) {
+                    jse.printStackTrace();
+                }
             }
 
             Activity activity = this.getActivity();
@@ -67,6 +74,8 @@ public class RecipeDetailFragment extends Fragment {
         }
     }
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -74,7 +83,23 @@ public class RecipeDetailFragment extends Fragment {
 
         // Show the dummy content as text in a TextView.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.recipe_detail)).setText("yuh");
+            try {
+                JSONObject recipe = mItem.getRecipe();
+                StringBuilder details = new StringBuilder("Ingredients:\n\n");
+                JSONArray ingredientArray = recipe.getJSONArray("ingredientLines");
+                for (int i = 0; i < ingredientArray.length(); i++) {
+                    details.append(ingredientArray.getString(i));
+                    details.append('\n');
+                }
+
+                details.append("Nutritional Information:\n");
+
+                ((TextView) rootView.findViewById(R.id.recipe_detail)).setTextSize(16.0f);
+                ((TextView) rootView.findViewById(R.id.recipe_detail)).setText(details);
+            }
+            catch (JSONException jse) {
+                jse.printStackTrace();
+            }
         }
 
         return rootView;

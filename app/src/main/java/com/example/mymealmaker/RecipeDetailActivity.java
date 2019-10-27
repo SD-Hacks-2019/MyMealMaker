@@ -15,6 +15,10 @@ import androidx.appcompat.app.ActionBar;
 
 import android.view.MenuItem;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * An activity representing a single Recipe detail screen. This
  * activity is only used on narrow width devices. On tablet-size devices,
@@ -22,6 +26,9 @@ import android.view.MenuItem;
  * in a {@link RecipeListActivity}.
  */
 public class RecipeDetailActivity extends AppCompatActivity {
+
+    public static String RECIPES = "com.example.mymealmaker.RECIPES";
+    private List<SerializableRecipe> recipes = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +52,15 @@ public class RecipeDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        Bundle extras = getIntent().getExtras();
+        if (extras != null && extras.containsKey(RECIPES)) {
+            Serializable incoming = extras.getSerializable(RECIPES);
+
+            if (incoming instanceof List) {
+                recipes = (List<SerializableRecipe>) incoming;
+            }
+        }
+
         // savedInstanceState is non-null when there is fragment state
         // saved from previous configurations of this activity
         // (e.g. when rotating the screen from portrait to landscape).
@@ -58,8 +74,8 @@ public class RecipeDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(RecipeDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(RecipeDetailFragment.ARG_ITEM_ID));
+            arguments.putSerializable(RecipeDetailFragment.ARG_ITEM_ID,
+                    getIntent().getSerializableExtra(RecipeDetailFragment.ARG_ITEM_ID));
             RecipeDetailFragment fragment = new RecipeDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
@@ -78,7 +94,9 @@ public class RecipeDetailActivity extends AppCompatActivity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(new Intent(this, RecipeListActivity.class));
+            Intent goBack = new Intent(this, RecipeListActivity.class);
+            goBack.putExtra(RECIPES, (Serializable) recipes);
+            navigateUpTo(goBack);
             return true;
         }
         return super.onOptionsItemSelected(item);
