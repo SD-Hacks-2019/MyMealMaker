@@ -75,12 +75,14 @@ public class RecipeDetailFragment extends Fragment {
     }
 
     public void appendNutritionalQuantity(StringBuilder builder, String label, JSONObject nutrients) throws JSONException {
-        JSONObject object = nutrients.getJSONObject(label);
-        builder.append(object.getString("label"));
-        builder.append(": ");
-        builder.append((int)object.getDouble("quantity"));
-        builder.append(object.getString("unit"));
-        builder.append('\n');
+        if (nutrients.has(label)) {
+            JSONObject object = nutrients.getJSONObject(label);
+            builder.append(object.getString("label"));
+            builder.append(": ");
+            builder.append((int) object.getDouble("quantity"));
+            builder.append(object.getString("unit"));
+            builder.append('\n');
+        }
     }
 
     @Override
