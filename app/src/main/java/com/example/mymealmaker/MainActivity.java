@@ -1,11 +1,12 @@
 package com.example.mymealmaker;
 
+import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.net.Uri
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -25,10 +26,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String INGREDIENTS = "com.example.mymealmaker.INGREDIENTS";
+
+    public static String awsID = "";
+    public static String awsSecret = "";
+
+    public static String edamamID = "";
+    public static String edamamSecret = "";
 
     static final int REQUEST_CAMERA = 1;
     static final int REQUEST_EXTERNAL_IMAGE = 2;
@@ -44,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("My Meal Maker");
         setSupportActionBar(toolbar);
 
         ingredientList = new ArrayList<>();
@@ -70,7 +81,11 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "An Error has Occurred opening AWS properties", Toast.LENGTH_SHORT).show();
         }
 
-        // get the key and secret
+        // get the Edamam key and secret
+        edamamID = edamamKey.getProperty("appID");
+        edamamSecret = edamamKey.getProperty("appKey");
+      
+        // get the AWS key and secret
         keyID = fAWSKey.getProperty("keyID");
         secret = fAWSKey.getProperty("secret");
     }
@@ -102,6 +117,16 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    public void doSearchRecipes(View view) {
+        Intent intent = new Intent(this, RecipeListActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(INGREDIENTS, (Serializable) Arrays.asList(new String[] {"chicken", "pasta"}));
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
+  
     public void captureImage() {
         final String optCamera = "Take a Photo";
         final String optGallery = "Choose from Gallery";
