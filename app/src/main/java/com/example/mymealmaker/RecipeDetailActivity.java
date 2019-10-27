@@ -1,6 +1,7 @@
 package com.example.mymealmaker;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -14,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.ActionBar;
 
 import android.view.MenuItem;
+
+import org.json.JSONException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,11 +41,12 @@ public class RecipeDetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
+            public boolean onLongClick(View view) {
+                Snackbar.make(view, "Tap to view the full recipe", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                return false;
             }
         });
 
@@ -74,8 +78,24 @@ public class RecipeDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putSerializable(RecipeDetailFragment.ARG_ITEM_ID,
-                    getIntent().getSerializableExtra(RecipeDetailFragment.ARG_ITEM_ID));
+
+            final SerializableRecipe currentRecipe = (SerializableRecipe) getIntent().getSerializableExtra(RecipeDetailFragment.ARG_ITEM_ID);
+
+            arguments.putSerializable(RecipeDetailFragment.ARG_ITEM_ID, (Serializable) currentRecipe);
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        Intent openUrl = new Intent(Intent.ACTION_VIEW, Uri.parse(new Recipe(currentRecipe).getRecipe().getString("url")));
+                        startActivity(openUrl);
+                    }
+                    catch (JSONException jse) {
+                        jse.printStackTrace();
+                    }
+                }
+            });
+
             RecipeDetailFragment fragment = new RecipeDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
