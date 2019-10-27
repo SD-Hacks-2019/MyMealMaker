@@ -1,5 +1,6 @@
 package com.example.mymealmaker;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -18,10 +19,18 @@ import com.amazonaws.auth.BasicAWSCredentials;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String INGREDIENTS = "com.example.mymealmaker.INGREDIENTS";
+
+    public static String awsID = "";
+    public static String awsSecret = "";
+
+    public static String edamamID = "";
+    public static String edamamSecret = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,19 +66,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // get the AWS key and secret
-        String keyID = awsKey.getProperty("keyID");
-        String secret = awsKey.getProperty("secret");
-
-        // log into AWS Rekognition
-        AmazonRekognitionClient myAWSClient = new AmazonRekognitionClient(new BasicAWSCredentials(keyID, secret));
+        awsID = awsKey.getProperty("keyID");
+        awsSecret = awsKey.getProperty("secret");
 
         // get the Edamam key and secret
-        String appID = edamamKey.getProperty("appID");
-        String appKey = edamamKey.getProperty("appKey");
-
-        EdamamCallback myCallback = new EdamamCallback(this);
-        EdamamClient myEdamamClient = new EdamamClient(appID, appKey);
-        myEdamamClient.requestRecipe(Arrays.asList(new String[]{"chicken", "pasta"}), myCallback);
+        edamamID = edamamKey.getProperty("appID");
+        edamamSecret = edamamKey.getProperty("appKey");
     }
 
     @Override
@@ -92,5 +94,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void doSearchRecipes(View view) {
+        Intent intent = new Intent(this, RecipeListActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(INGREDIENTS, (Serializable) Arrays.asList(new String[] {"chicken", "pasta"}));
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 }
